@@ -40,6 +40,77 @@
 
 **Contact / 联系方式**: 如有任何问题，请通过 GitHub Issues 联系。
 
+## 从源码启动 / Run from Source
+
+本仓库现已支持从源码本地启动 Claude Code（功能有所缩减）。
+
+### 快速开始
+
+```bash
+# 1. 安装依赖并设置 shim
+node scripts/setup.mjs
+
+# 2. 设置 API Key
+export ANTHROPIC_API_KEY="sk-ant-xxx"
+
+# 3. 启动
+bun entrypoints/cli.tsx
+
+# 或使用启动脚本 (macOS/Linux)
+./start.sh
+```
+
+### 工作原理
+
+| 问题 | 解决方案 |
+|------|----------|
+| `bun:bundle` 编译时 API | `preload.ts` 提供运行时 shim，`feature()` 全部返回 `false` |
+| 89 个 Feature Flag | 全部禁用（所有 feature-gated 代码路径不执行） |
+| `MACRO.*` 编译时宏 | `preload.ts` 中定义为全局变量 |
+| 无 `package.json` | 已从 import 语句逆向工程出 100+ 依赖 |
+| `@ant/*` 内部包 | `scripts/setup.mjs` 创建空实现 stub |
+
+### 不可用的功能（缺失私有包）
+
+以下功能依赖 Anthropic 私有包，在本地运行时**不可用**：
+
+| 功能 | 缺失的包 | 说明 |
+|------|----------|------|
+| Computer Use（电脑操控） | `@ant/computer-use-mcp` | 截屏、鼠标点击、键盘输入等 |
+| 原生键鼠输入 | `@ant/computer-use-input` | Rust/enigo 原生绑定 |
+| macOS 截屏/窗口管理 | `@ant/computer-use-swift` | Swift 原生绑定，仅 macOS |
+| Chrome 浏览器集成 | `@ant/claude-for-chrome-mcp` | Chrome 扩展 MCP server |
+| 沙箱运行时 | `@anthropic-ai/sandbox-runtime` | 命令执行沙箱 |
+| MCP Bridge | `@anthropic-ai/mcpb` | MCP 协议桥接 |
+
+### 所有 89 个 Feature Flag（全部禁用）
+
+由于 `feature()` 在运行时返回 `false`，以下功能全部被禁用：
+
+`ABLATION_BASELINE` `AGENT_MEMORY_SNAPSHOT` `AGENT_TRIGGERS` `BRIDGE_MODE` `BUDDY` `BUILDING_CLAUDE_APPS` `CCR_AUTO_CONNECT` `COORDINATOR_MODE` `DAEMON` `DIRECT_CONNECT` `DUMP_SYSTEM_PROMPT` `FORK_SUBAGENT` `HISTORY_PICKER` `KAIROS` `MCP_SKILLS` `MONITOR_TOOL` `NATIVE_CLIPBOARD_IMAGE` `PERFETTO_TRACING` `QUICK_SEARCH` `SSH_REMOTE` `STREAMLINED_OUTPUT` `TEAMMEM` `TEMPLATES` `TERMINAL_PANEL` `TORCH` `ULTRAPLAN` `ULTRATHINK` `VOICE_MODE` `WEB_BROWSER_TOOL` `WORKFLOW_SCRIPTS` 等共 89 个。
+
+### 构建流程推断
+
+```
+TypeScript 源码
+  │
+  ├─ Bun bundler (`bun build`)
+  │   ├─ 注入 MACRO.* 常量（--define）
+  │   ├─ 解析 feature() 调用 → 设置 89 个 feature flag 的 true/false
+  │   ├─ Dead Code Elimination → 移除未启用 feature 的代码分支
+  │   └─ 打包为单文件 JS bundle
+  │
+  ├─ 可选：Bun compile → 编译为单文件可执行二进制
+  │
+  └─ 发布到 npm (@anthropic-ai/claude-code)
+```
+
+### 如果你想运行官方版本
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
 ## 深度分析系列 / Deep Analysis
 
 我们对 Claude Code 的完整架构进行了源码级的深度拆解，产出了 **18 篇分析文章**，覆盖核心 Agent 引擎和六大外围子系统。
