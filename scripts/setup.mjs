@@ -16,8 +16,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
-// Source files are in the root directory (not src/)
-const SRC = ROOT;
+// Source files are in the src/ subdirectory
+const SRC = join(ROOT, 'src');
 
 const log = (msg) => console.log(`\x1b[36m[setup]\x1b[0m ${msg}`);
 const ok = (msg) => console.log(`\x1b[32m  ✓\x1b[0m ${msg}`);
@@ -264,7 +264,7 @@ export default {};
 
 for (const [file, content] of Object.entries(missingFiles)) {
   if (content === null) continue; // file already exists
-  const fullPath = join(ROOT, file);
+  const fullPath = join(SRC, file);
   if (!existsSync(fullPath)) {
     mkdirSync(dirname(fullPath), { recursive: true });
     writeFileSync(fullPath, content.trim() ? content.trim() + '\n' : '');
@@ -324,8 +324,8 @@ console.log('    \x1b[1m# Set your API key\x1b[0m');
 console.log('    export ANTHROPIC_API_KEY="sk-ant-xxx"');
 console.log('');
 console.log('    \x1b[1m# Interactive mode\x1b[0m');
-console.log('    bun entrypoints/cli.tsx');
+console.log('    bun src/entrypoints/cli.tsx');
 console.log('');
 console.log('    \x1b[1m# Non-interactive mode\x1b[0m');
-console.log('    bun entrypoints/cli.tsx -p "your prompt"');
+console.log('    bun src/entrypoints/cli.tsx -p "your prompt"');
 console.log('');

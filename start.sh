@@ -32,4 +32,4 @@ if [ -n "${ANTHROPIC_BASE_URL:-}" ]; then
   esac
 fi
 
-exec bun entrypoints/cli.tsx "$@"
+exec bun src/entrypoints/cli.tsx "$@"

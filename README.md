@@ -42,7 +42,15 @@
 
 ## 从源码启动 / Run from Source
 
-本仓库现已支持从源码本地启动 Claude Code（功能有所缩减）。
+本仓库现已支持从源码本地启动 Claude Code（功能有所缩减）。已验证可成功运行，版本号 `2.1.88 (Claude Code)`。
+
+### 环境要求
+
+| 依赖 | 说明 |
+|------|------|
+| **Node.js** ≥ 18 | 运行 setup 脚本 |
+| **Bun** ≥ 1.0 | 运行 Claude Code（setup 脚本会自动安装） |
+| **Anthropic API Key** | 需要有效的 `sk-ant-xxx` 密钥 |
 
 ### 快速开始
 
@@ -54,11 +62,28 @@ node scripts/setup.mjs
 export ANTHROPIC_API_KEY="sk-ant-xxx"
 
 # 3. 启动
-bun entrypoints/cli.tsx
+bun src/entrypoints/cli.tsx
 
 # 或使用启动脚本 (macOS/Linux)
 ./start.sh
+
+# Windows 用户
+set ANTHROPIC_API_KEY=sk-ant-xxx
+bun src/entrypoints/cli.tsx
 ```
+
+### 创建的 Shim 文件
+
+以下文件是为了让源码可运行而创建的，不属于原始源码：
+
+| 文件 | 作用 |
+|------|------|
+| `package.json` | 从 import 语句逆向工程出的 100+ 依赖声明 |
+| `tsconfig.json` | TypeScript 配置，含 `src/*` 路径映射 |
+| `bunfig.toml` | Bun 配置，指定 preload 插件 |
+| `preload.ts` | 核心 shim：`bun:bundle` 模拟、`MACRO.*` 全局变量、`src/` 路径解析、`.md` 文件加载 |
+| `scripts/setup.mjs` | 一键安装：依赖安装、私有包 stub、缺失文件生成、ripgrep 下载 |
+| `start.sh` | macOS/Linux 启动脚本，含首次运行检测和 API Key 校验 |
 
 ### 工作原理
 
@@ -67,6 +92,7 @@ bun entrypoints/cli.tsx
 | `bun:bundle` 编译时 API | `preload.ts` 提供运行时 shim，`feature()` 全部返回 `false` |
 | 89 个 Feature Flag | 全部禁用（所有 feature-gated 代码路径不执行） |
 | `MACRO.*` 编译时宏 | `preload.ts` 中定义为全局变量 |
+| `from 'src/...'` 导入 | 源码放在 `src/` 目录下，路径天然匹配，无需额外重定向 |
 | 无 `package.json` | 已从 import 语句逆向工程出 100+ 依赖 |
 | `@ant/*` 内部包 | `scripts/setup.mjs` 创建空实现 stub |
 
@@ -104,6 +130,23 @@ TypeScript 源码
   │
   └─ 发布到 npm (@anthropic-ai/claude-code)
 ```
+
+### Windows 注意事项
+
+- **ripgrep**：setup 脚本中的 tar 解压在 Windows 上可能失败。如果 Grep/搜索功能不可用，请手动安装 [ripgrep](https://github.com/BurntSushi/ripgrep/releases) 并确保 `rg` 在 PATH 中
+- **Bun 路径**：安装 Bun 后需要重启终端，或手动将 `%USERPROFILE%\.bun\bin` 添加到 PATH
+- **启动脚本**：`start.sh` 仅适用于 macOS/Linux，Windows 用户请直接使用 `bun src/entrypoints/cli.tsx`
+
+### 故障排查
+
+| 错误 | 解决方案 |
+|------|----------|
+| `Cannot find module 'src/...'` | 确认源码在 `src/` 目录下，且 `bunfig.toml` 存在 |
+| `Missing 'default' export in module '*.md'` | 确认 `preload.ts` 包含 `.md` 文件加载器 |
+| `Cannot find package '@ant/...'` | 运行 `node scripts/setup.mjs` 重新创建 stub |
+| `bun: command not found` | 安装 Bun: `curl -fsSL https://bun.sh/install \| bash`（或重启终端） |
+| `ANTHROPIC_API_KEY is not set` | 设置环境变量: `export ANTHROPIC_API_KEY="sk-ant-xxx"` |
+| 使用非 Anthropic 代理 | 设置 `DISABLE_PROMPT_CACHING=1` 和 `DISABLE_INTERLEAVED_THINKING=1` |
 
 ### 如果你想运行官方版本
 
@@ -157,25 +200,35 @@ npm install -g @anthropic-ai/claude-code
 | 16 | [工具实现](claude-code-deep-analysis/16-tool-implementations.md) | 45+ 工具、统一接口、BashTool 安全体系 |
 | 17 | [Hook 系统](claude-code-deep-analysis/17-hook-system.md) | 13 种事件、5 种 Hook 类型、阻断机制 |
 
-## Structure / 源码结构
+## Structure / 项目结构
 
-This repository contains the TypeScript source code of Claude Code CLI, including:
-
-- `query.ts` - **Core agent loop** (1729 lines) — the heart of Claude Code
-- `QueryEngine.ts` - Session management and entry orchestration (1295 lines)
-- `Tool.ts` - Tool interface definition (793 lines)
-- `cli/` - CLI entry point and configuration
-- `commands/` - 103+ slash command implementations
-- `components/` - 146+ UI components (Ink/React)
-- `hooks/` - 104 React hooks for UI state management
-- `services/` - Core services (MCP, compact, analytics, OAuth, etc.)
-- `tools/` - 45+ tool implementations (Bash, Read, Edit, Write, Grep, Agent, etc.)
-- `utils/` - 564+ utility files (permissions, messages, hooks, session, etc.)
-- `memdir/` - Memory system for cross-session persistence
-- `bridge/` - CLI ↔ VS Code extension communication
-- `constants/` - System prompt assembly and configuration
-- `plugins/` - Plugin architecture
-- `voice/` - Voice input support
+```
+根目录/
+├── README.md                    ← 文档
+├── package.json                 ← 依赖声明（逆向工程）
+├── tsconfig.json                ← TypeScript 配置
+├── bunfig.toml                  ← Bun preload 配置
+├── preload.ts                   ← 运行时 shim
+├── start.sh                     ← 启动脚本
+├── scripts/setup.mjs            ← 一键安装脚本
+├── claude-code-deep-analysis/   ← 深度分析文章（原创）
+└── src/                         ← Anthropic 源码
+    ├── query.ts                 ← 核心 Agent 循环
+    ├── QueryEngine.ts           ← 会话管理
+    ├── Tool.ts                  ← 工具接口定义
+    ├── entrypoints/             ← 入口文件
+    ├── commands/                ← 103+ slash 命令
+    ├── components/              ← 146+ UI 组件
+    ├── tools/                   ← 45+ 工具实现
+    ├── utils/                   ← 564+ 工具函数
+    ├── services/                ← 核心服务
+    ├── hooks/                   ← 104 React hooks
+    ├── memdir/                  ← 跨会话记忆
+    ├── bridge/                  ← CLI ↔ VS Code 通信
+    ├── constants/               ← System Prompt 组装
+    ├── plugins/                 ← 插件架构
+    └── voice/                   ← 语音输入
+```
 
 ## License / 版权声明
 

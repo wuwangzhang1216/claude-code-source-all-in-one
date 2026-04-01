@@ -27,6 +27,21 @@ plugin({
       };
     });
 
+    // Resolve 'src/*' bare imports to actual files in the src/ directory.
+    // Bun doesn't resolve bare 'src/...' specifiers on its own.
+    build.onResolve({ filter: /^src\// }, (args) => {
+      const basePath = resolve(__dirname, args.path);
+      const fs = require("fs");
+      // Try .ts, .tsx extensions (source uses .js in imports but files are .ts)
+      for (const ext of ["", ".ts", ".tsx"]) {
+        const candidate = basePath.replace(/\.js$/, "") + ext;
+        if (fs.existsSync(candidate)) {
+          return { path: candidate };
+        }
+      }
+      return { path: basePath };
+    });
+
     // Handle .md and .txt file imports as text (Bun bundler does this at build time)
     build.onLoad({ filter: /\.(md|txt)$/ }, async (args) => {
       const fs = require("fs");
@@ -35,25 +50,6 @@ plugin({
         exports: { default: text },
         loader: "object",
       };
-    });
-
-    // Redirect 'src/*' imports to root directory.
-    // The source code uses `from 'src/...'` paths but our files are at root level.
-    build.onResolve({ filter: /^src\// }, (args) => {
-      const relativePath = args.path.replace(/^src\//, "");
-      // Try .ts, .tsx, .js extensions
-      const basePath = resolve(__dirname, relativePath);
-      for (const ext of ["", ".ts", ".tsx", ".js"]) {
-        const candidate = basePath.replace(/\.js$/, "") + ext;
-        try {
-          const fs = require("fs");
-          if (fs.existsSync(candidate)) {
-            return { path: candidate };
-          }
-        } catch {}
-      }
-      // Fallback: let Bun resolve it from root
-      return { path: resolve(__dirname, relativePath) };
     });
   },
 });

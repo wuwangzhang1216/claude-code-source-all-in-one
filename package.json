@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "setup": "node scripts/setup.mjs",
-    "start": "bun entrypoints/cli.tsx",
-    "cli": "bun entrypoints/cli.tsx"
+    "start": "bun src/entrypoints/cli.tsx",
+    "cli": "bun src/entrypoints/cli.tsx"
   },
   "dependencies": {
     "@alcalzone/ansi-tokenize": "^0.3.0",

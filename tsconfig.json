@@ -14,5 +14,5 @@
     "baseUrl": ".",
     "rootDir": "."
   },
-  "include": ["./**/*.ts", "./**/*.tsx", "preload.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "preload.ts"]
 }
