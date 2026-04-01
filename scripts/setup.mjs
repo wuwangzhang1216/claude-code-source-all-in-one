@@ -138,10 +138,8 @@ export default {};
   // NOTE: @alcalzone/ansi-tokenize is installed via npm (required for Ink rendering)
 
   'color-diff-napi': `
-export const ColorDiff = {};
-export const ColorFile = {};
-export const getSyntaxTheme = () => ({});
-export default {};
+// Redirect to pure TypeScript implementation (native NAPI binary unavailable from source)
+export { ColorDiff, ColorFile, getSyntaxTheme } from '../../src/native-ts/color-diff/index.ts';
 `,
 
   'modifiers-napi': 'module.exports = {};',
@@ -283,16 +281,11 @@ log('\x1b[32m Setup complete!\x1b[0m');
 console.log('');
 console.log('  To run Claude Code:');
 console.log('');
-console.log('    \x1b[1m# Set your API key\x1b[0m');
+console.log('    \x1b[1m# Option 1: Login with Claude subscription (Pro/Max/Team)\x1b[0m');
+console.log('    ./start.sh login');
+console.log('    ./start.sh');
+console.log('');
+console.log('    \x1b[1m# Option 2: Use an API key\x1b[0m');
 console.log('    export ANTHROPIC_API_KEY="sk-ant-xxx"');
-console.log('');
-console.log('    \x1b[1m# (Optional) Use a third-party proxy\x1b[0m');
-console.log('    export ANTHROPIC_BASE_URL="https://your-proxy.com"');
-console.log('    export DISABLE_PROMPT_CACHING=1');
-console.log('');
-console.log('    \x1b[1m# Interactive mode\x1b[0m');
-console.log('    bun src/entrypoints/cli.tsx');
-console.log('');
-console.log('    \x1b[1m# Non-interactive (pipe/script) mode\x1b[0m');
-console.log('    bun src/entrypoints/cli.tsx -p "your prompt" --dangerously-skip-permissions < /dev/null');
+console.log('    ./start.sh');
 console.log('');

@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 #
 # Start Claude Code - one-command launcher
+#
+# Authentication (pick one):
+#   1. OAuth subscription (Pro/Max/Team/Enterprise):
+#      ./start.sh login          # First-time login via browser
+#      ./start.sh                # Then just run normally
+#
+#   2. API key:
+#      export ANTHROPIC_API_KEY="sk-ant-xxx"
+#      ./start.sh
+#
+#   3. Third-party proxy:
+#      export ANTHROPIC_BASE_URL="https://your-proxy.com"
+#      export ANTHROPIC_API_KEY="your-key"
+#      ./start.sh
+#
 # Usage:
 #   ./start.sh                     # Interactive mode
+#   ./start.sh login               # Login with Claude.ai subscription
+#   ./start.sh logout              # Logout
 #   ./start.sh -p "your prompt"    # Non-interactive mode
 #   ./start.sh --help              # Show help
 #
@@ -22,19 +39,15 @@ if [ ! -d "node_modules/@anthropic-ai/sdk" ]; then
   echo ""
 fi
 
-# Check API key
-if [ -z "$ANTHROPIC_API_KEY" ]; then
-  echo "Error: ANTHROPIC_API_KEY is not set."
-  echo ""
-  echo "  export ANTHROPIC_API_KEY=\"sk-ant-xxx\""
-  echo ""
-  echo "Or for third-party proxies:"
-  echo ""
-  echo "  export ANTHROPIC_BASE_URL=\"https://your-proxy.com\""
-  echo "  export ANTHROPIC_API_KEY=\"your-key\""
-  echo "  export DISABLE_PROMPT_CACHING=1"
-  echo ""
-  exit 1
+# Handle "login" and "logout" subcommands
+if [ "$1" = "login" ]; then
+  shift
+  exec bun src/entrypoints/cli.tsx auth login --claudeai "$@"
+fi
+
+if [ "$1" = "logout" ]; then
+  shift
+  exec bun src/entrypoints/cli.tsx auth logout "$@"
 fi
 
 # Auto-detect third-party proxy and disable incompatible features
@@ -43,5 +56,44 @@ if [ -n "$ANTHROPIC_BASE_URL" ] && ! echo "$ANTHROPIC_BASE_URL" | grep -q "anthr
   export DISABLE_INTERLEAVED_THINKING="${DISABLE_INTERLEAVED_THINKING:-1}"
   export CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS="${CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS:-1}"
 fi
+
+# Check if any auth method is available:
+#   1. ANTHROPIC_API_KEY env var
+#   2. OAuth credentials from previous login (~/.claude/.credentials.json or Keychain)
+#   3. Third-party services (Bedrock/Vertex/Foundry)
+#   4. OAuth token env var
+has_auth=false
+
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  has_auth=true
+elif [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+  has_auth=true
+elif [ -n "$CLAUDE_CODE_USE_BEDROCK" ] || [ -n "$CLAUDE_CODE_USE_VERTEX" ] || [ -n "$CLAUDE_CODE_USE_FOUNDRY" ]; then
+  has_auth=true
+elif [ -f "$HOME/.claude/.credentials.json" ] && [ -s "$HOME/.claude/.credentials.json" ]; then
+  has_auth=true
+else
+  # Check macOS Keychain for OAuth credentials (silent, won't prompt)
+  if security find-generic-password -s "Claude Code-credentials" -w >/dev/null 2>&1; then
+    has_auth=true
+  elif security find-generic-password -s "Claude Code" -w >/dev/null 2>&1; then
+    has_auth=true
+  fi
+fi
+
+if [ "$has_auth" = false ]; then
+  echo "No authentication found."
+  echo ""
+  echo "  Option 1 - Claude Pro/Max subscription (recommended):"
+  echo "    ./start.sh login"
+  echo ""
+  echo "  Option 2 - API key:"
+  echo "    export ANTHROPIC_API_KEY=\"sk-ant-xxx\""
+  echo "    ./start.sh"
+  echo ""
+  exit 1
+fi
+
+echo "✓ Authentication detected, starting Claude Code..."
 
 exec bun src/entrypoints/cli.tsx "$@"
