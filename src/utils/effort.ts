@@ -304,16 +304,11 @@ export function getDefaultEffortForModel(
   // the model launch DRI and research. Default effort is a sensitive setting
   // that can greatly affect model quality and bashing.
 
-  // Default effort on Opus 4.6 to medium for Pro.
-  // Max/Team also get medium when the tengu_grey_step2 config is enabled.
+  // Default effort on Opus 4.6 to medium for Pro only.
+  // All other user types (API-key, Bedrock/Vertex/Foundry, Team, Enterprise)
+  // fall through to undefined = high.
   if (model.toLowerCase().includes('opus-4-6')) {
     if (isProSubscriber()) {
-      return 'medium'
-    }
-    if (
-      getOpusDefaultEffortConfig().enabled &&
-      (isMaxSubscriber() || isTeamSubscriber())
-    ) {
       return 'medium'
     }
   }

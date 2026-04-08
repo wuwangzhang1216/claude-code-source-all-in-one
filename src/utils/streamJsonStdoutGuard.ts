@@ -56,13 +56,23 @@ export function installStreamJsonStdoutGuard(): void {
     process.stdout,
   ) as typeof process.stdout.write
 
+  // Use a streaming TextDecoder to correctly handle multi-byte UTF-8
+  // sequences (CJK, emoji, etc.) that may be split across chunk boundaries.
+  // Without streaming mode, split sequences produce U+FFFD replacement chars.
+  const utf8Decoder = new TextDecoder('utf-8', { fatal: false })
+
   process.stdout.write = function (
     chunk: string | Uint8Array,
     encodingOrCb?: BufferEncoding | ((err?: Error) => void),
     cb?: (err?: Error) => void,
   ): boolean {
     const text =
-      typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8')
+      typeof chunk === 'string'
+        ? chunk
+        : utf8Decoder.decode(
+            chunk instanceof Uint8Array ? chunk : Buffer.from(chunk),
+            { stream: true },
+          )
 
     buffer += text
     let newlineIdx: number

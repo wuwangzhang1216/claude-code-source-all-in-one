@@ -533,10 +533,17 @@ function buildNamespace(targetDir: string, baseDir: string): string {
   return relativePath ? relativePath.split(pathSep).join(':') : ''
 }
 
-function getSkillCommandName(filePath: string, baseDir: string): string {
+function getSkillCommandName(
+  filePath: string,
+  baseDir: string,
+  frontmatter?: FrontmatterData,
+): string {
   const skillDirectory = dirname(filePath)
   const parentOfSkillDir = dirname(skillDirectory)
-  const commandBaseName = basename(skillDirectory)
+  // Use the frontmatter name if present — gives a stable invocation name
+  // across install methods (e.g. marketplace vs local clone).
+  const commandBaseName =
+    frontmatter?.name != null ? String(frontmatter.name) : basename(skillDirectory)
 
   const namespace = buildNamespace(parentOfSkillDir, baseDir)
   return namespace ? `${namespace}:${commandBaseName}` : commandBaseName
@@ -554,7 +561,7 @@ function getRegularCommandName(filePath: string, baseDir: string): string {
 function getCommandName(file: MarkdownFile): string {
   const isSkill = isSkillFile(file.filePath)
   return isSkill
-    ? getSkillCommandName(file.filePath, file.baseDir)
+    ? getSkillCommandName(file.filePath, file.baseDir, file.frontmatter)
     : getRegularCommandName(file.filePath, file.baseDir)
 }
 

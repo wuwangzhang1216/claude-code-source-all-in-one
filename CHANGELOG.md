@@ -2,6 +2,39 @@
 
 All notable changes tracked here. This is a local/educational source mirror of Claude Code, not an official release stream.
 
+## 2.1.94 — April 7, 2026
+
+Applies the user-facing, tractable subset of the upstream 2.1.94 changelog.
+
+### Applied in this local source tree
+
+- Changed default effort level from `medium` to `high` (i.e. `undefined` in the API) for API-key, Bedrock/Vertex/Foundry, Team, and Enterprise users on Opus 4.6. Pro subscribers remain at `medium`.
+- Added `sessionTitle` field to `UserPromptSubmit` hook specific output, allowing hooks to set the session title.
+- `--resume` now resumes sessions from other worktrees of the same repo directly for all users (previously gated to internal users only).
+- Fixed CJK and other multibyte text being corrupted with U+FFFD in `stream-json` stdout guard when chunk boundaries split a UTF-8 sequence — now uses `TextDecoder` with streaming mode.
+- Added `FORCE_HYPERLINK` environment variable support in terminal hyperlink detection, so setting it via `settings.json` env is respected.
+- Plugin skills declared via `"skills": ["./"]` now use the skill's frontmatter `name` for the invocation name instead of the directory basename, giving a stable name across install methods.
+
+### Not applied (upstream-only internal fixes)
+
+- `CLAUDE_CODE_USE_MANTLE` Bedrock Mantle provider support
+- Slack MCP compact `#channel` header with clickable link
+- `keep-coding-instructions` frontmatter field for plugin output styles
+- 429 rate-limit Retry-After agent stuck fix
+- Console login macOS keychain locked/out-of-sync fix
+- Plugin hooks YAML frontmatter / `CLAUDE_PLUGIN_ROOT` resolution fixes
+- SDK/print mode partial assistant response preservation on interrupt
+- Scrollback repeated diff / blank pages in long sessions
+- Multiline prompt indentation under `❯` caret
+- Shift+Space inserting literal "space" in search inputs
+- Hyperlinks opening two browser tabs in tmux + xterm.js terminals
+- Alt-screen ghost lines from content height changes mid-scroll
+- Native terminal cursor not tracking selected tab in dialogs
+- Bedrock Sonnet 3.5 v2 inference profile ID fix
+- VSCode cold-open subprocess reduction, dropdown menu fix, settings.json parse warning banner
+
+---
+
 ## 2.1.92 — April 4, 2026
 
 Applies the user-facing, tractable subset of the upstream 2.1.92 changelog.

@@ -26,13 +26,21 @@ type SupportsHyperlinksOptions = {
 export function supportsHyperlinks(
   options?: SupportsHyperlinksOptions,
 ): boolean {
+  const env = options?.env ?? process.env
+
+  // Honor FORCE_HYPERLINK env var (e.g. set via settings.json env).
+  // This check must come before the library check, because the library
+  // may have cached its result at module-init time before settings.json
+  // env vars were applied to process.env.
+  if (env['FORCE_HYPERLINK']) {
+    return true
+  }
+
   const stdoutSupported =
     options?.stdoutSupported ?? supportsHyperlinksLib.stdout
   if (stdoutSupported) {
     return true
   }
-
-  const env = options?.env ?? process.env
 
   // Check for additional terminals not detected by supports-hyperlinks
   const termProgram = env['TERM_PROGRAM']

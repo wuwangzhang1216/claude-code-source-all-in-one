@@ -61,14 +61,17 @@ function getCommandNameFromFile(
   filePath: string,
   baseDir: string,
   pluginName: string,
+  frontmatter?: FrontmatterData,
 ): string {
   const isSkill = isSkillFile(filePath)
 
   if (isSkill) {
-    // For skills, use the parent directory name
+    // For skills, use the frontmatter name if present, otherwise the parent directory name.
+    // Using the frontmatter name gives a stable invocation name across install methods.
     const skillDirectory = dirname(filePath)
     const parentOfSkillDir = dirname(skillDirectory)
-    const commandBaseName = basename(skillDirectory)
+    const commandBaseName =
+      frontmatter?.name != null ? String(frontmatter.name) : basename(skillDirectory)
 
     // Build namespace from parent of skill directory
     const relativePath = parentOfSkillDir.startsWith(baseDir)
@@ -192,6 +195,7 @@ async function loadCommandsFromDirectory(
       file.filePath,
       file.baseDir,
       pluginName,
+      file.frontmatter,
     )
 
     const command = createPluginCommand(
