@@ -2,6 +2,12 @@
 
 All notable changes tracked here. This is a local/educational source mirror of Claude Code, not an official release stream.
 
+## 2.1.96 — April 8, 2026
+
+Version-only bump. The single upstream fix (Bedrock 403 "Authorization header is missing" regression with `AWS_BEARER_TOKEN_BEDROCK` / `CLAUDE_CODE_SKIP_BEDROCK_AUTH`) does not affect this source tree — we did not touch Bedrock auth code in our 2.1.94 sync.
+
+---
+
 ## 2.1.94 — April 7, 2026
 
 Applies the user-facing, tractable subset of the upstream 2.1.94 changelog.
