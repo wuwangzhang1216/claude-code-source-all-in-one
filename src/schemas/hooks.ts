@@ -206,10 +206,23 @@ export const HookMatcherSchema = lazySchema(() =>
 /**
  * Schema for hooks configuration
  * The key is the hook event. The value is an array of matcher configurations.
- * Uses partialRecord since not all hook events need to be defined.
+ *
+ * Accepts any string key so that an unrecognized hook event name in
+ * settings.json doesn't cause the entire file to be rejected. Unknown
+ * keys are silently stripped during parsing (upstream 2.1.101 resilience).
  */
 export const HooksSchema = lazySchema(() =>
-  z.partialRecord(z.enum(HOOK_EVENTS), z.array(HookMatcherSchema())),
+  z
+    .record(z.string(), z.array(HookMatcherSchema()).optional())
+    .transform(obj => {
+      const result: Partial<Record<HookEvent, HookMatcher[]>> = {}
+      for (const [key, value] of Object.entries(obj)) {
+        if ((HOOK_EVENTS as readonly string[]).includes(key) && value) {
+          result[key as HookEvent] = value
+        }
+      }
+      return result
+    }),
 )
 
 // Inferred types from schemas

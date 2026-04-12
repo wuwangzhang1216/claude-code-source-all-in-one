@@ -419,6 +419,24 @@ export async function resolveHookPermissionDecision(
     hookPermissionResult.updatedInput
       ? hookPermissionResult.updatedInput
       : input
+
+  // When a hook returns 'ask', forceDecision bypasses hasPermissionsToUseTool
+  // entirely — which means deny rules would never be checked. Guard against
+  // that: if a deny rule matches, it takes priority over the hook's 'ask'.
+  if (forceDecision) {
+    const ruleCheck = await checkRuleBasedPermissions(
+      tool,
+      askInput,
+      toolUseContext,
+    )
+    if (ruleCheck?.behavior === 'deny') {
+      logForDebugging(
+        `Hook requested ask for ${tool.name}, but deny rule overrides: ${ruleCheck.message}`,
+      )
+      return { decision: ruleCheck, input: askInput }
+    }
+  }
+
   return {
     decision: await canUseTool(
       tool,

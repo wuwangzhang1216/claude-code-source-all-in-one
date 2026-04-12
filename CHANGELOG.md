@@ -2,6 +2,19 @@
 
 All notable changes tracked here. This is a local/educational source mirror of Claude Code, not an official release stream.
 
+## 2.1.101 — April 10, 2026
+
+### Applied
+- **Fixed command injection vulnerability in POSIX `which` / Windows `where.exe` fallback** — `whichNodeAsync` and `whichNodeSync` passed the command name through a shell string unsanitized; now uses `execa` array-args (no shell) for async, and quotes/escapes for sync (`src/utils/which.ts`)
+- **Fixed `permissions.deny` rules not overriding a PreToolUse hook's `permissionDecision: 'ask'`** — when a hook returned 'ask', the `forceDecision` path bypassed `hasPermissionsToUseTool` entirely, skipping deny-rule checks; now deny rules are checked before the forceDecision passthrough (`src/services/tools/toolHooks.ts`)
+- **Added `CLAUDE_CODE_CERT_STORE` to `SAFE_ENV_VARS`** — supports the upstream OS CA certificate store trust feature; set to `bundled` to use only bundled CAs (`src/utils/managedEnvConstants.ts`)
+- **Improved settings resilience: unrecognized hook event names no longer cause the entire settings file to be rejected** — `HooksSchema` now accepts any string key and silently strips unknown events during parsing (`src/schemas/hooks.ts`)
+
+### Not applied (upstream-only)
+Skipped: `/team-onboarding` command, OS CA cert auto-trust plumbing beyond env var, `/ultraplan` auto-create cloud env, brief mode structured retry, focus mode self-contained summaries, tool-not-available error messages, rate-limit retry messages, refusal error messages, `--resume` session title support, plugin hooks with `allowManagedHooksOnly`, `/plugin update` marketplace warning, plan mode Ultraplan visibility, OTEL tracing opt-in fields, SDK `query()` cleanup, memory leak in virtual scroller, `--resume`/`--continue` recovery fixes, hardcoded 5-minute timeout (already 600s in our source), `--setting-sources` cleanup period, Bedrock SigV4 auth header conflict, worktree stale directory, subagent MCP/worktree access, sandbox `mktemp`, MCP serve `outputSchema`, RemoteTrigger empty body, `/resume` picker fixes, Grep ENOENT fallback, `/btw` disk write, `/context` breakdown, plugin slash-command/cache/context fixes, `/mcp` OAuth menu, keybinding C0 bytes, `/login` OAuth URL, rendering/flicker fixes, in-app settings refresh, `--continue -p`, Remote Control fixes, `/insights` link, VSCode file-attachment clear.
+
+---
+
 ## 2.1.96 — April 8, 2026
 
 Version-only bump. The single upstream fix (Bedrock 403 "Authorization header is missing" regression with `AWS_BEARER_TOKEN_BEDROCK` / `CLAUDE_CODE_SKIP_BEDROCK_AUTH`) does not affect this source tree — we did not touch Bedrock auth code in our 2.1.94 sync.
