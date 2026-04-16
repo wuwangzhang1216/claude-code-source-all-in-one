@@ -696,6 +696,43 @@ export const SettingsSchema = lazySchema(() =>
         .describe(
           'Whether /rename updates the terminal tab title (defaults to true). Set to false to keep auto-generated topic titles.',
         ),
+      tui: z
+        .enum(['default', 'fullscreen'])
+        .optional()
+        .describe(
+          'Rendering mode for the terminal UI. "fullscreen" switches Ink into alt-screen mode for flicker-free rendering. Toggle at runtime with /tui.',
+        ),
+      autoScrollEnabled: z
+        .boolean()
+        .optional()
+        .describe(
+          'Whether the conversation view auto-scrolls to the newest content in fullscreen mode. Defaults to true; set to false to keep the current scroll position pinned.',
+        ),
+      showLastResponseInExternalEditor: z
+        .boolean()
+        .optional()
+        .describe(
+          "When true, Ctrl+G opens the external editor with Claude's last response included as commented context.",
+        ),
+      pushNotifications: z
+        .object({
+          enabled: z
+            .boolean()
+            .optional()
+            .describe(
+              'Master switch for the push notification tool. Must be true for Claude to be able to send mobile push notifications.',
+            ),
+          pushWhenClaudeDecides: z
+            .boolean()
+            .optional()
+            .describe(
+              'When true, Claude may call the push_notification tool on its own. When false, pushes only fire for system-driven events (e.g. permission requests).',
+            ),
+        })
+        .optional()
+        .describe(
+          'Mobile push notification configuration. Requires Remote Control to be configured for the session to be linked to a recipient device.',
+        ),
       alwaysThinkingEnabled: z
         .boolean()
         .optional()

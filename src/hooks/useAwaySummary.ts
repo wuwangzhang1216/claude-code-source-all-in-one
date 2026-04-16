@@ -7,6 +7,7 @@ import {
 import { getFeatureValue_CACHED_MAY_BE_STALE } from '../services/analytics/growthbook.js'
 import { generateAwaySummary } from '../services/awaySummary.js'
 import type { Message } from '../types/message.js'
+import { isEnvDefinedFalsy, isEnvTruthy } from '../utils/envUtils.js'
 import { createAwaySummaryMessage } from '../utils/messages.js'
 
 const BLUR_DELAY_MS = 5 * 60_000
@@ -44,15 +45,24 @@ export function useAwaySummary(
   messagesRef.current = messages
   isLoadingRef.current = isLoading
 
-  // 3P default: false
+  // Upstream 2.1.110 extends session recap to telemetry-disabled users
+  // (Bedrock/Vertex/Foundry/DISABLE_TELEMETRY) and lets anyone opt out via
+  // CLAUDE_CODE_ENABLE_AWAY_SUMMARY=0 (or /config toggle). Priority order:
+  //   1. Explicit env opt-out always wins.
+  //   2. Explicit env opt-in bypasses GrowthBook (needed for telemetry-off
+  //      users whose GB config never fetches).
+  //   3. Otherwise fall back to the GB gate (3P default: false).
+  const envFalsy = isEnvDefinedFalsy(process.env.CLAUDE_CODE_ENABLE_AWAY_SUMMARY)
+  const envTruthy = isEnvTruthy(process.env.CLAUDE_CODE_ENABLE_AWAY_SUMMARY)
   const gbEnabled = getFeatureValue_CACHED_MAY_BE_STALE(
     'tengu_sedge_lantern',
     false,
   )
+  const enabled = envFalsy ? false : envTruthy ? true : gbEnabled
 
   useEffect(() => {
     if (!feature('AWAY_SUMMARY')) return
-    if (!gbEnabled) return
+    if (!enabled) return
 
     function clearTimer(): void {
       if (timerRef.current !== null) {
@@ -113,7 +123,7 @@ export function useAwaySummary(
       abortInFlight()
       generateRef.current = null
     }
-  }, [gbEnabled, setMessages])
+  }, [enabled, setMessages])
 
   // Timer fired mid-turn → fire when turn ends (if still blurred)
   useEffect(() => {

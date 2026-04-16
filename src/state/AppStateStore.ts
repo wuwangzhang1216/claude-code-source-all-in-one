@@ -94,6 +94,11 @@ export type AppState = DeepImmutable<{
   statusLineText: string | undefined
   expandedView: 'none' | 'tasks' | 'teammates'
   isBriefOnly: boolean
+  // Focus view: when true, the transcript hides tool use/result blocks and
+  // shows only assistant text. Toggled by the /focus slash command. Not
+  // persisted across sessions — upstream parity with 2.1.110 which decoupled
+  // focus view from the ctrl+o verbose transcript toggle.
+  isFocusOnly: boolean
   // Optional - only present when ENABLE_AGENT_SWARMS is true (for dead code elimination)
   showTeammateMessagePreview?: boolean
   selectedIPAgentIndex: number
@@ -475,6 +480,7 @@ export function getDefaultAppState(): AppState {
     statusLineText: undefined,
     expandedView: 'none',
     isBriefOnly: false,
+    isFocusOnly: false,
     showTeammateMessagePreview: false,
     selectedIPAgentIndex: -1,
     coordinatorTaskIndex: -1,

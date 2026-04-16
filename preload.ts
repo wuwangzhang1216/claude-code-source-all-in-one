@@ -28,6 +28,6 @@ plugin({
 // MACRO.* globals are inlined at build time by Bun's bundler.
 // We define them as runtime globals instead.
 (globalThis as any).MACRO = {
-  VERSION: "2.1.101",
+  VERSION: "2.1.110",
   ISSUES_EXPLAINER: "https://github.com/anthropics/claude-code/issues",
 };

@@ -2,6 +2,35 @@
 
 All notable changes tracked here. This is a local/educational source mirror of Claude Code, not an official release stream.
 
+## 2.1.110 — April 15, 2026
+
+Applies the user-facing, tractable subset of the upstream 2.1.110 changelog.
+
+### Applied in this local source tree
+
+- **Added `/tui` command + `tui` setting** — switches the Ink renderer between `default` and `fullscreen` (alt-screen) rendering without restarting. The `/tui` command persists the choice via `updateSettingsForSource('userSettings', { tui })`, and `isFullscreenEnvEnabled()` now reads the setting after the env var precedence chain (`src/commands/tui/`, `src/utils/fullscreen.ts`, `src/utils/settings/types.ts`).
+- **Added `/focus` command** — toggles the new `isFocusOnly` flag on `AppState`, decoupling focus view from the `ctrl+o` verbose-transcript toggle (`src/commands/focus/`, `src/state/AppStateStore.ts`). Transcript filtering wiring is intentionally deferred; this is the upstream command surface.
+- **Added `PushNotificationTool` scaffolding** — full tool definition (inputs, prompt, UI render, `isEnabled` gated on `pushNotifications.enabled && pushWhenClaudeDecides` in settings) so the `require('./tools/PushNotificationTool/PushNotificationTool.js')` in `tools.ts` has a real target. Delivery is a logged stub — real delivery requires the Remote Control bridge, which is CCR-side.
+- **Added `autoScrollEnabled`, `tui`, `pushNotifications`, and `showLastResponseInExternalEditor` to `SettingsSchema`** — surfacing the new 2.1.110 toggles via `/config` and managed settings (`src/utils/settings/types.ts`).
+- **Bash tool now enforces the documented maximum timeout** — `BashTool.tsx` was using `timeout || getDefaultTimeoutMs()` without clamping, so a model-supplied `timeout` above `BASH_MAX_TIMEOUT_MS` slipped through and contradicted the tool's own prompt ("up to ${getMaxTimeoutMs()}ms"). Now `Math.min(...)` with `getMaxTimeoutMs()`, aligning with the PowerShellTool behavior (`src/tools/BashTool/BashTool.tsx`).
+- **Added `TRACEPARENT` and `TRACESTATE` to `SAFE_ENV_VARS`** — so SDK/headless sessions launched via managed env propagation can join an existing distributed trace (`src/utils/managedEnvConstants.ts`).
+- **Added `CLAUDE_CODE_ENABLE_AWAY_SUMMARY` opt-out env var** — `useAwaySummary` now short-circuits if the env var is falsy, bypasses GrowthBook if truthy (needed for telemetry-disabled users: Bedrock/Vertex/Foundry/`DISABLE_TELEMETRY`), and otherwise falls back to the existing GB gate. Env var is also now in `SAFE_ENV_VARS` so managed settings can set it (`src/hooks/useAwaySummary.ts`, `src/utils/managedEnvConstants.ts`).
+- **Bumped local source version to `2.1.110`** (from `2.1.101`) — `package.json` and `preload.ts` MACRO.
+
+### Not applied (upstream-only or out of scope)
+
+- Remote Control message routing for `/context`, `/exit`, `/reload-plugins` (bridge is CCR-side, already stubbed locally).
+- `--resume` / `--continue` resurrecting unexpired scheduled tasks — requires the CronCreate/scheduler persistence path we don't mirror.
+- Write-tool IDE-diff "user edited content" notification — requires VSCode IDE extension diff-proposal plumbing not faithfully present in this source tree.
+- `/doctor` duplicate-MCP-endpoint warning, `/plugin` Installed-tab pin/fold reordering, f-to-favorite, dependency-install listing.
+- Ctrl+G external-editor "include last response as comment" option (UI plumbing for Ctrl+G editor round-trip).
+- Rendering/focus/flicker/keystroke-drop/`/resume` title/session-cleanup/synchronized-output/ink-wide-line fixes — terminal-level patches below our faithful-mirror line.
+- PermissionRequest hook `updatedInput` re-check against `permissions.deny` / `setMode:'bypassPermissions'` respect — upstream hook-engine fix, not surfaced in this mirror's simplified hook layer.
+- `PreToolUse` hook `additionalContext` preservation on tool-call failure; `stdio` MCP stray-stdout tolerance; headless auto-title suppression under `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`; "Open in editor" untrusted-filename hardening — internal fixes without a direct local touchpoint.
+- `--resume`/`--continue` auto-retitle-vs-prompt display precedence; queued-message double-render; Remote Control re-login prompt / rename-persistence; session-subdirectory cleanup — Remote/session-manager internals.
+
+---
+
 ## 2.1.101 — April 10, 2026
 
 ### Applied

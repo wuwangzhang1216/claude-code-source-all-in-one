@@ -857,7 +857,12 @@ async function* runShellCommand({
     timeout,
     run_in_background
   } = input;
-  const timeoutMs = timeout || getDefaultTimeoutMs();
+  // Clamp to the documented maximum. Previously any user-supplied value was
+  // used as-is, so a model could pin a shell open well past the advertised
+  // ceiling (BASH_MAX_TIMEOUT_MS / 10-minute default). PowerShellTool
+  // already enforces this via Math.min; align the Bash tool with upstream
+  // 2.1.110 behavior so the prompt's "up to ${getMaxTimeoutMs()}ms" is real.
+  const timeoutMs = Math.min(timeout || getDefaultTimeoutMs(), getMaxTimeoutMs());
   let fullOutput = '';
   let lastProgressOutput = '';
   let lastTotalLines = 0;

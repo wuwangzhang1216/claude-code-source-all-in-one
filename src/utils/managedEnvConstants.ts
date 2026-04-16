@@ -138,6 +138,7 @@ export const SAFE_ENV_VARS = new Set([
   'CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS',
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
   'CLAUDE_CODE_DISABLE_TERMINAL_TITLE',
+  'CLAUDE_CODE_ENABLE_AWAY_SUMMARY',
   'CLAUDE_CODE_ENABLE_TELEMETRY',
   'CLAUDE_CODE_NO_FLICKER',
   'CLAUDE_CODE_PLUGIN_KEEP_MARKETPLACE_ON_FAILURE',
@@ -182,6 +183,11 @@ export const SAFE_ENV_VARS = new Set([
   'OTEL_METRICS_INCLUDE_SESSION_ID',
   'OTEL_METRICS_INCLUDE_VERSION',
   'OTEL_RESOURCE_ATTRIBUTES',
+  // W3C Trace Context — upstream 2.1.110 lets SDK/headless sessions join an
+  // existing distributed trace via these env vars. Safe to propagate because
+  // they only carry trace IDs/flags, not auth or endpoints.
+  'TRACEPARENT',
+  'TRACESTATE',
   'USE_BUILTIN_RIPGREP',
   'VERTEX_REGION_CLAUDE_3_5_HAIKU',
   'VERTEX_REGION_CLAUDE_3_5_SONNET',

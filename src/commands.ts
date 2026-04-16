@@ -53,6 +53,7 @@ const agentsPlatform =
 import securityReview from './commands/security-review.js'
 import bughunter from './commands/bughunter/index.js'
 import terminalSetup from './commands/terminalSetup/index.js'
+import tui from './commands/tui/index.js'
 import usage from './commands/usage/index.js'
 import theme from './commands/theme/index.js'
 import { feature } from 'bun:bundle'
@@ -125,6 +126,7 @@ import thinkbackPlay from './commands/thinkback-play/index.js'
 import permissions from './commands/permissions/index.js'
 import plan from './commands/plan/index.js'
 import fast from './commands/fast/index.js'
+import focus from './commands/focus/index.js'
 import passes from './commands/passes/index.js'
 import privacySettings from './commands/privacy-settings/index.js'
 import hooks from './commands/hooks/index.js'
@@ -275,6 +277,7 @@ const COMMANDS = memoize((): Command[] => [
   exit,
   fast,
   files,
+  focus,
   heapDump,
   help,
   ide,
@@ -307,6 +310,7 @@ const COMMANDS = memoize((): Command[] => [
   rewind,
   securityReview,
   terminalSetup,
+  tui,
   upgrade,
   extraUsage,
   extraUsageNonInteractive,

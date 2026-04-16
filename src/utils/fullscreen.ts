@@ -108,6 +108,10 @@ export function _resetTmuxControlModeProbeForTesting(): void {
  * Runtime env-var check only. Ants default to on (CLAUDE_CODE_NO_FLICKER=0
  * to opt out); external users default to off (CLAUDE_CODE_NO_FLICKER=1 to
  * opt in).
+ *
+ * Also consults the `tui` setting (`default` | `fullscreen`) written by the
+ * /tui command, so runtime toggles persist without requiring a restart or
+ * env var flip. Env var, when explicitly set, still wins over the setting.
  */
 export function isFullscreenEnvEnabled(): boolean {
   // Explicit user opt-out always wins.
@@ -125,7 +129,28 @@ export function isFullscreenEnvEnabled(): boolean {
     }
     return false
   }
+  // /tui setting (persisted): overrides the ant/external default below.
+  const tuiSetting = readTuiSettingSafe()
+  if (tuiSetting === 'fullscreen') return true
+  if (tuiSetting === 'default') return false
   return process.env.USER_TYPE === 'ant'
+}
+
+/**
+ * Read the `tui` setting without throwing — settings module may not be
+ * initialized yet, and fullscreen gating is called very early. Any error
+ * during read falls back to "unset" so the caller's env/default wins.
+ */
+function readTuiSettingSafe(): 'default' | 'fullscreen' | undefined {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('./settings/settings.js') as {
+      getInitialSettings?: () => { tui?: 'default' | 'fullscreen' }
+    }
+    return mod.getInitialSettings?.().tui
+  } catch {
+    return undefined
+  }
 }
 
 /**
